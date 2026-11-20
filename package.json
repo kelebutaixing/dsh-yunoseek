@@ -1,0 +1,53 @@
+{
+  "name": "dsh-yunoseek",
+  "version": "1.0.0",
+  "private": true,
+  "description": "DSH 整合包：千石由乃主题 + 消息头像 + Live2D 桌宠 + 语音朗读 + Agent 预设，装一次全上",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.png",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "host",
+    "server",
+    "scripts",
+    "models",
+    "refs",
+    "assets",
+    "locale",
+    "icon.png",
+    "icon.svg",
+    "README.md"
+  ],
+  "engines": {
+    "dsh": ">=0.1.7-rc.1",
+    "node": ">=22"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-ui-conversation",
+        "@deepseek-ai/dsh-client-ui-settings",
+        "@deepseek-ai/dsh-client-ui-settings-plugins"
+      ]
+    }
+  },
+  "icon": "./icon.png",
+  "optionalDependencies": {
+    "koffi": "^3.3.7"
+  }
+}
