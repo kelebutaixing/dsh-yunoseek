@@ -1,0 +1,18 @@
+# 大件资源不进仓库：
+#   models/  语音权重，单个 148/165 MB，超过 GitHub 100 MB 硬限
+#   assets/  Live2D 模型，64 MB
+#   refs/    参考音频，随包分发
+# 这些放在 Release 的安装包里，见 README「安装」。
+/models/
+/assets/
+/refs/
+
+# 依赖
+node_modules/
+.pnpm-store/
+
+# 本地状态与临时文件
+*.log
+.tmp*
+.DS_Store
+Thumbs.db
