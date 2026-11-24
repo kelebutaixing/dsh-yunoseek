@@ -220,8 +220,20 @@ ${factoryBlock}
 })
 `
 
-  const out = `${banner}${prefixBlock}
+  let out = `${banner}${prefixBlock}
 ${entry}`
+
+  /* 包内字体内联：assets/fonts 里的 woff2 → base64 塞进 @font-face 的占位符。
+     这样装了这个包就自带字体，不依赖系统里装没装。 */
+  const fontPath = join(ROOT, 'assets', 'fonts', 'AlimamaShuHeiTi-Bold.woff2')
+  if (existsSync(fontPath)) {
+    const b64 = readFileSync(fontPath).toString('base64')
+    out = out.split('__YUNO_FONT_B64__').join(b64)
+  } else {
+    console.warn('缺 assets/fonts/AlimamaShuHeiTi-Bold.woff2，字体占位符未替换（会回退到系统字体）')
+    out = out.split('__YUNO_FONT_B64__').join('')
+  }
+
   const target = join(ROOT, 'client.js')
   writeFileSync(target, out, 'utf8')
   console.log(`\nclient.js 写好了：${(out.length / 1024).toFixed(0)} KB（${chunks.length} 段）`)

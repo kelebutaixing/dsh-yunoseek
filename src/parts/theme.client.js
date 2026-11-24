@@ -22,6 +22,27 @@ window.__ModuleLoader__.load({
     /** 她的直播 tag，画面上原样出现过。 */
     const LIVE_TAG = '#\u30e6\u30ce\u306e\u751f\u5b58\u5831\u544a';
 
+    /* ───────── 字体面板用到的常量 ───────── */
+    const FONT_KEY = 'dsh-yuno-font';
+    /** 默认字体：包内自带（@font-face 'Yuno ShuHeiTi'），装包即用。 */
+    const FONT_FALLBACK = 'Yuno ShuHeiTi';
+    /** 面板里给的几档字重。包内数黑体只有一个 Bold，其余靠系统字体； */
+    /** 用户换成有多字重的字体（HarmonyOS 等）时这些档位才真正有区别。 */
+    const FONT_WEIGHTS = [300, 400, 500, 600, 700];
+    /** 候选字体名：探测到才列出来，探不到的不会出现在下拉里。 */
+    const FONT_CANDIDATES = [
+      'Yuno ShuHeiTi',
+      'HarmonyOS Sans SC', 'HarmonyOS Sans', 'HarmonyOS Sans TC',
+      '\u963f\u91cc\u5988\u5988\u6570\u9ed1\u4f53', 'Alimama ShuHeiTi',
+      'Microsoft YaHei', 'Microsoft YaHei UI', 'DengXian', 'SimSun', 'SimHei', 'KaiTi', 'FangSong',
+      'PingFang SC', 'Hiragino Sans GB', 'Noto Sans SC', 'Source Han Sans SC', 'Source Han Sans CN',
+      'LXGW WenKai', 'LXGW WenKai Screen', 'Sarasa Mono SC', 'Sarasa Gothic SC',
+      'Alibaba PuHuiTi', 'Alibaba PuHuiTi 3', 'OPPO Sans', 'MiSans', 'HONOR Sans',
+      'Segoe UI', 'Segoe UI Variable', 'Inter', 'Roboto', 'Helvetica Neue', 'Arial',
+      'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Cascadia Mono', 'Consolas',
+      'SF Mono', 'Menlo', 'Courier New',
+    ];
+
     /**
      * 空会话页的大标题与「预览版」徽标由壳层直接渲染，没有插槽。
      * 这里按精确文案做替换/隐藏，并在卸载时还原；壳层重渲染后会再套用一次。
@@ -67,6 +88,182 @@ window.__ModuleLoader__.load({
   --yuno-pink:#ff3d7f;--yuno-pink-soft:#ff8fbd;--yuno-violet:#7c5cff;
   --yuno-cyan:#3ee6e0;--yuno-amber:#ffcf5b;}
 ::selection{background:rgba(255,61,127,.34)}
+
+/* ───────── 自带字体：阿里妈妈数黑体 ─────────
+ * 字体文件随包走（assets/fonts/*.woff2 → build 时 base64 内联），
+ * 所以装了这个主题包就自带，不依赖系统里有没有装这套字。
+ * 只有一个 Bold 字重，声明 200 900 的范围让浏览器直接用它、不要合成。 */
+@font-face{
+  font-family:'Yuno ShuHeiTi';
+  src:url(data:font/woff2;base64,__YUNO_FONT_B64__) format('woff2');
+  font-weight:200 900;
+  font-style:normal;
+  font-display:swap;
+}
+
+/* ───────── 全站字体 ─────────
+ * ui-theme 的默认栈变量是 --dsh-font-family-text-default，
+ * body 上的 --dsw-font-family 取 var(--dsh-font-family-text, 默认栈)。
+ * 所以改 default 就等于换掉全站正文字体；而设置里自己填过字体时
+ * （--dsh-font-family-text 非空）那个优先，这里不会抢。
+ * 包内字体排第一，后面才是系统字体兜底（生僻字/缺字时回退）。 */
+html:root{
+  --dsh-font-family-text-default:"Yuno ShuHeiTi","Alimama ShuHeiTi","HarmonyOS Sans SC","HarmonyOS Sans","Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",Helvetica,Arial,sans-serif;
+}
+/* 标题类（markdown h1-h4）默认跟着 var(--dsw-font-family) 走，再兜一层。 */
+html body{font-family:var(--dsw-font-family);font-weight:var(--yuno-fw,400)}
+
+/* ───────── 字体设置卡片：挂在 设置 → 通用 里 ───────── */
+.dsh-yuno-fontcard{display:flex;flex-direction:column;gap:8px;width:100%;max-width:560px;
+  font:12px/1.55 var(--dsw-font-family);color:var(--dsw-alias-label-primary)}
+.dsh-yuno-fontcard__title{font-size:13px;font-weight:600;color:var(--dsw-alias-label-primary)}
+.dsh-yuno-fontcard__desc{font-size:11.5px;line-height:1.55;color:var(--dsw-alias-label-secondary);margin-top:-3px}
+.dsh-yuno-fontcard label{display:block;margin-top:4px;font-size:11px;color:var(--dsw-alias-label-secondary)}
+.dsh-yuno-fontcard select,.dsh-yuno-fontcard input[type="text"]{
+  width:100%;box-sizing:border-box;padding:6px 9px;border-radius:8px;
+  border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);
+  color:var(--dsw-alias-label-primary);font:12px/1.4 var(--dsw-font-family);outline:none}
+.dsh-yuno-fontcard select:focus,.dsh-yuno-fontcard input[type="text"]:focus{
+  border-color:var(--dsw-alias-brand-primary)}
+.dsh-yuno-fontcard__seg{display:flex;gap:5px;flex-wrap:wrap}
+.dsh-yuno-fontcard__seg button{flex:1;min-width:52px;padding:6px 0;border-radius:7px;cursor:pointer;
+  border:1px solid var(--dsw-alias-border-l2);background:var(--dsw-alias-bg-layer-1);
+  color:var(--dsw-alias-label-secondary);font:11px/1 ui-monospace,monospace;transition:.14s}
+.dsh-yuno-fontcard__seg button:hover{border-color:var(--dsw-alias-brand-primary);color:var(--dsw-alias-label-primary)}
+.dsh-yuno-fontcard__seg button[aria-pressed="true"]{
+  background:var(--dsw-alias-brand-primary);border-color:var(--dsw-alias-brand-primary);
+  color:#fff;font-weight:600}
+.dsh-yuno-fontcard__preview{margin-top:4px;padding:10px 11px;border-radius:9px;
+  background:var(--dsw-alias-bg-layer-1);border:1px solid var(--dsw-alias-border-l2);
+  font-size:14px;line-height:1.6;color:var(--dsw-alias-label-primary)}
+.dsh-yuno-fontcard__row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:2px}
+.dsh-yuno-fontcard__note{font-size:10.5px;line-height:1.5;color:var(--dsw-alias-label-tertiary)}
+.dsh-yuno-fontcard__reset{padding:5px 10px;border-radius:7px;cursor:pointer;
+  border:1px solid var(--dsw-alias-border-l2);background:transparent;
+  color:var(--dsw-alias-label-secondary);font:11px/1 var(--dsw-font-family)}
+.dsh-yuno-fontcard__reset:hover{border-color:var(--dsw-alias-brand-primary);color:var(--dsw-alias-label-primary)}
+
+/* ───────── 整体皮肤 ─────────
+ * 只剩 01 深夜调音台一套。
+ * 这一层刻意动骨架：侧栏行、tab、输入面板、消息卡都重画，
+ * 不是只换颜色——只换色的话用户会说"跟原来没区别"。
+ * 类名全部按 asar 里的真实 module.css 名取（hash 前缀用子串匹配）。 */
+
+/* 三套共用的骨架钩子：先把壳层自己的圆角/描边收掉，各套再画自己的。 */
+[class*="_viewTabs"] > button{
+  position:relative;border-radius:0;transition:color .14s,background-color .14s}
+[class*="_topStrip"]{position:relative}
+[class*="_logoRow"]{position:relative}
+[class*="_panelRow"]{position:relative;transition:background-color .14s,color .14s}
+button[class*="_newSession"]{position:relative;overflow:hidden;transition:.16s}
+
+/* ── 工作区分组：分组头是一张卡，会话是挂在脊线上的目录项 ──
+ * 真实类名：_groupSection / _projectRow / _sessionRow / _title / _time。
+ * 分组头 = 有底、有圆角、字粗；会话 = 无底、字小一号、更淡，
+ * 左边一条脊线 + 每行一个横向小钩。高亮块只占横钩右边那一块。 */
+[class*="_groupSection"]{margin-top:10px}
+[class*="_groupSection"] > [class*="_projectRow"]{
+  border-radius:12px;font-weight:650;letter-spacing:.01em;font-size:13.5px}
+[class*="_sessionRow"]{
+  position:relative;border-radius:6px;margin-top:1px;
+  padding-inline-start:calc(var(--dsh-sidebar-row-padding, 8px) - var(--dsh-sidebar-paint-inset, 0px) + 30px)!important;
+  color:var(--dsw-alias-label-secondary)}
+/* 脊线：贯穿整行，相邻行首尾相接。线宽用整数 2px，
+   亚像素宽度在非整数 DPR 下会和横钩各取各的整，接缝就裂一条。
+   位置比横钩左移 2px：让竖线正好抵在横钩左端，别叠在一起——
+   两个半透明的 2px 叠在同一个交叉点会显出一块更亮的方块。 */
+[class*="_sessionRow"]::before{
+  content:"";position:absolute;left:15px;top:0;bottom:0;width:2px;
+  pointer-events:none}
+/* 横钩：从竖线右边缘起笔，向右伸 */
+[class*="_sessionRow"]::after{
+  content:"";position:absolute;left:17px;top:50%;width:9px;height:2px;
+  margin-top:-1px;pointer-events:none}
+[class*="_sessionRow"] [class*="_title"]{font-size:12.5px;margin-left:2px}
+[class*="_sessionRow"] [class*="_time"]{
+  font-variant-numeric:tabular-nums;letter-spacing:.02em;font-size:9.5px;opacity:.62}
+[class*="_sessionRow"][class*="selected"]{
+  color:var(--dsw-alias-label-primary);font-weight:500}
+
+/* ── 01 NIGHT WAVE：干净的深紫底。侧栏不铺条纹。 ── */
+[class*="_sidebarCol"]{
+  background:linear-gradient(180deg,#170828,#0b0417 62%,#120620)}
+[class*="_panelRow"]{
+  border-left:2px solid transparent;padding-left:10px}
+[class*="_panelRow"]:hover{
+  border-left-color:rgba(255,61,127,.85);
+  background:linear-gradient(90deg,rgba(255,61,127,.16),rgba(255,61,127,.02) 70%,transparent)}
+[class*="_panelRow"]::before{
+  content:"";position:absolute;left:0;top:50%;width:2px;height:0;margin-top:-0px;
+  background:#ff3d7f;box-shadow:0 0 8px #ff3d7f;opacity:0;transition:.16s}
+[class*="_panelRow"]:hover::before{height:16px;margin-top:-8px;opacity:1}
+button[class*="_newSession"]{
+  background:linear-gradient(90deg,rgba(255,61,127,.2),rgba(124,92,255,.1) 64%,transparent);
+  box-shadow:inset 0 0 0 1px rgba(255,110,180,.3),0 8px 22px -18px rgba(255,61,127,.9);
+  border-radius:6px;font-weight:600;letter-spacing:.01em}
+button[class*="_newSession"]:hover{
+  background:linear-gradient(90deg,rgba(255,61,127,.3),rgba(124,92,255,.16) 64%,transparent);
+  box-shadow:inset 0 0 0 1px rgba(255,61,127,.6),0 0 20px -8px rgba(255,61,127,.85)}
+[class*="_viewTabs"] > button[class*="_tab"]{
+  font-family:var(--dsw-font-mono),ui-monospace,monospace;font-size:12px;letter-spacing:.06em}
+[class*="_viewTabs"] > button[class*="_tab"]::before{
+  content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:rgba(255,110,180,.16)}
+[class*="_tabActive"]{
+  color:#ff5c96}
+[class*="_tabActive"]::after{
+  background:linear-gradient(90deg,#ff3d7f,#7c5cff);box-shadow:0 0 12px -1px rgba(255,61,127,.9);height:2px}
+/* 输入面板：四角的 L 标记 + 顶边刻度，像一台设备 */
+[class*="_composerSeat"] [class*="_card"]{
+  border-radius:10px;
+  background-color:rgba(24,10,40,.92);
+  background-image:
+    linear-gradient(90deg,#ff3d7f 0 12px,transparent 12px) top left/20px 1.5px no-repeat,
+    linear-gradient(180deg,#ff3d7f 0 12px,transparent 12px) top left/1.5px 20px no-repeat,
+    linear-gradient(270deg,#3ee6e0 0 12px,transparent 12px) top right/20px 1.5px no-repeat,
+    linear-gradient(180deg,#3ee6e0 0 12px,transparent 12px) top right/1.5px 20px no-repeat,
+    linear-gradient(90deg,#3ee6e0 0 12px,transparent 12px) bottom left/20px 1.5px no-repeat,
+    linear-gradient(0deg,#3ee6e0 0 12px,transparent 12px) bottom left/1.5px 20px no-repeat,
+    linear-gradient(270deg,#ff3d7f 0 12px,transparent 12px) bottom right/20px 1.5px no-repeat,
+    linear-gradient(0deg,#ff3d7f 0 12px,transparent 12px) bottom right/1.5px 20px no-repeat,
+    linear-gradient(180deg,rgba(255,61,127,.1),transparent 64%);
+  box-shadow:inset 0 0 0 1px rgba(255,110,180,.14),0 26px 60px -40px rgba(255,61,127,.9)}
+
+/* 侧栏列表的滚动条：原来轨道占一条深色竖带，看着像行右边多了块东西。
+   轨道透明、滑块收细。 */
+[class*="_listArea"]{scrollbar-width:thin;scrollbar-color:rgba(255,61,127,.3) transparent}
+[class*="_listArea"]::-webkit-scrollbar{width:8px;height:8px}
+[class*="_listArea"]::-webkit-scrollbar-track,
+[class*="_listArea"]::-webkit-scrollbar-corner{background:transparent;border:0}
+[class*="_listArea"]::-webkit-scrollbar-thumb{
+  background:rgba(255,61,127,.28);border-radius:4px;
+  border:2px solid transparent;background-clip:content-box}
+[class*="_listArea"]::-webkit-scrollbar-thumb:hover{background:rgba(255,61,127,.5);background-clip:content-box}
+
+/* 工作区分组：粉紫通道色。分组头比会话明显"重"一档。 */
+[class*="_projectRow"]{
+  background:linear-gradient(90deg,rgba(255,61,127,.22),rgba(124,92,255,.10) 78%,rgba(255,61,127,.06));
+  /* 壳层那 3px 透明侧边框会让圆角和描边错位，抹平；描边用 outline 跟着圆角走 */
+  border-inline-width:0;
+  background-clip:border-box;
+  border-radius:14px;
+  outline:1px solid rgba(255,110,180,.26);
+  outline-offset:-1px;
+  box-shadow:0 6px 18px -14px rgba(255,61,127,.9)}
+[class*="_projectRow"] svg{color:#ff8fbd}
+[class*="_sessionRow"]::before{background:rgba(255,110,180,.34)}
+[class*="_sessionRow"]::after{background:rgba(255,110,180,.34)}
+/* 会话行的底色块只占横钩右边那一块：左边（脊线 + 横钩）永远空着。
+   壳层原生用 background-color 铺满整行，这里压成透明，改用渐变硬切。 */
+[class*="_sessionRow"],
+[class*="_sessionRow"]:hover,
+[class*="_sessionRow"][class*="selected"]{
+  background-color:transparent;border-radius:0 6px 6px 0}
+[class*="_sessionRow"]:hover{
+  background-image:linear-gradient(90deg,transparent 0 27px,rgba(255,61,127,.10) 27px,rgba(124,92,255,.04) 72%,transparent)}
+[class*="_sessionRow"][class*="selected"]{
+  background-image:linear-gradient(90deg,transparent 0 27px,rgba(255,61,127,.22) 27px,rgba(124,92,255,.08) 72%,transparent)}
+
+
 
 /* ───────── 氛围层：深夜的房间 ───────── */
 .dsh-yuno-ambient{position:fixed;inset:0;pointer-events:none;overflow:hidden;
@@ -143,27 +340,19 @@ html.dsh-yuno-light .dsh-yuno-model__tag{background:linear-gradient(90deg,#d81b6
   content:"";position:absolute;top:0;left:14px;right:14px;height:3px;pointer-events:none;
   background-image:repeating-linear-gradient(90deg,rgba(255,61,127,.55) 0 1px,transparent 1px 8px);
   opacity:.45;border-radius:0 0 2px 2px}
-/* 发送键：一颗被点亮的旋钮 */
+/* 发送键：纯色块，不要球面高光和外发光。hover 只换颜色。 */
 [class*="_composerSeat"] [class*="_primary"]{
-  background:radial-gradient(circle at 50% 26%,#ff8fbd,#f01a63 58%,#870a3c);
-  box-shadow:0 0 0 2px rgba(255,61,127,.16),0 0 20px -4px rgba(255,61,127,.85),
-    inset 0 1px 1px rgba(255,255,255,.45);
-  transition:background-color .12s,box-shadow .16s,transform .12s}
-[class*="_composerSeat"] [class*="_primary"]:hover:not(:disabled){
-  background:radial-gradient(circle at 50% 26%,#ffb0cf,#ff2b74 58%,#9c0b45);
-  box-shadow:0 0 0 2px rgba(62,230,224,.34),0 0 26px -2px rgba(255,61,127,.95),
-    inset 0 1px 1px rgba(255,255,255,.5)}
+  background:#e02a6b;box-shadow:none;
+  transition:background-color .12s,transform .12s}
+[class*="_composerSeat"] [class*="_primary"]:hover:not(:disabled){background:#ff3d7f}
 [class*="_composerSeat"] [class*="_primary"]:active:not(:disabled){transform:translateY(0) scale(.96)}
 [class*="_composerSeat"] [class*="_primary"]:disabled{filter:saturate(.4);opacity:.5}
-/* 附件键：小旋钮 */
+/* 附件键：同一种平底，只留一圈细线 */
 [class*="_composerSeat"] [class*="_add"]{
-  background:radial-gradient(circle at 50% 30%,#332745,#170f22 72%);
-  box-shadow:inset 0 0 0 1px rgba(255,61,127,.42),inset 0 -3px 6px rgba(0,0,0,.6),
-    0 0 12px -6px rgba(255,61,127,.9)}
+  background:#1b1029;box-shadow:inset 0 0 0 1px rgba(255,61,127,.3)}
 [class*="_composerSeat"] [class*="_select"]{color:var(--dsw-alias-label-secondary)}
 [class*="_composerSeat"] [class*="_select"]:hover:not(:disabled){color:var(--dsw-alias-label-primary)}[class*="_composerSeat"] [class*="_add"]:hover:not(:disabled){
-  box-shadow:inset 0 0 0 1px rgba(62,230,224,.55),inset 0 -3px 6px rgba(0,0,0,.6),
-    0 0 14px -4px rgba(62,230,224,.8)}
+  background:#261536;box-shadow:inset 0 0 0 1px rgba(255,61,127,.62)}
 
 /* ───────── 用户气泡：一张唱片标签 ─────────
  * 锚点必须是 data-message-bubble，不要退回 [class*="_bubble"]：
@@ -182,17 +371,38 @@ html.dsh-yuno-light .dsh-yuno-model__tag{background:linear-gradient(90deg,#d81b6
 /* ───────── 自己的构件 ───────── */
 .dsh-yuno-logo{display:block;flex:none;object-fit:contain;
   filter:drop-shadow(0 4px 14px rgba(255,61,127,.32))}
-.dsh-yuno-brand-name{display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;
-  white-space:nowrap;font-weight:650;letter-spacing:.01em;
+/* 品牌名：两层叠出来。
+ * 底下那层用同一份渐变 + 透明描边，靠 background-clip:text 让描边区也吃到渐变
+ * ——CSS 的 -webkit-text-stroke 只收纯色，这是唯一能让"描边跟着渐变颜色走"的办法。
+ * 上面那层是正常的渐变填充，盖住中间、只留外面一圈当描边。 */
+.dsh-yuno-brand-name{position:relative;display:inline-block;max-width:100%;
+  white-space:nowrap;font-weight:800;letter-spacing:.01em;line-height:1.2}
+.dsh-yuno-brand-name__stroke,
+.dsh-yuno-brand-name__fill{
   background-image:linear-gradient(100deg,#ff9ec8,#ff3d7f 46%,#8f6bff 88%);
   -webkit-background-clip:text;background-clip:text;color:transparent}
-.dsh-yuno-brand-name--light{background-image:linear-gradient(100deg,#d81b6b,#b0137a 48%,#6d28d9)}
-.dsh-yuno-brand-name--hero{background-image:linear-gradient(100deg,#ff9ec8,#ff3d7f 46%,#8f6bff 88%)!important;
+.dsh-yuno-brand-name__stroke{position:absolute;left:0;top:0;
+  -webkit-text-stroke:1.2px transparent;aria-hidden:true;pointer-events:none}
+.dsh-yuno-brand-name__fill{position:relative}
+.dsh-yuno-brand-name--light .dsh-yuno-brand-name__stroke,
+.dsh-yuno-brand-name--light .dsh-yuno-brand-name__fill{
+  background-image:linear-gradient(100deg,#d81b6b,#b0137a 48%,#6d28d9)}
+/* 空会话页那个大标题是壳层直接渲染的，只能加 class，插不进双层结构。
+ * 所以描边那一层用 ::before + attr() 画：patch 时把文字写进 data-yuno-text。 */
+.dsh-yuno-brand-name--hero{position:relative;
+  background-image:linear-gradient(100deg,#ff9ec8,#ff3d7f 46%,#8f6bff 88%)!important;
   -webkit-background-clip:text!important;background-clip:text!important;
   color:transparent!important;-webkit-text-fill-color:transparent;
-  font-weight:700!important;letter-spacing:.01em}
+  font-weight:800!important;letter-spacing:.01em}
+.dsh-yuno-brand-name--hero::before{
+  content:attr(data-yuno-text);position:absolute;left:0;top:0;
+  background-image:linear-gradient(100deg,#ff9ec8,#ff3d7f 46%,#8f6bff 88%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  -webkit-text-stroke:1.4px transparent;pointer-events:none;white-space:nowrap}
 .dsh-yuno-brand-name--hero.dsh-yuno-brand-name--hero-light{
   background-image:linear-gradient(100deg,#d81b6b,#b0137a 48%,#6d28d9)!important}
+.dsh-yuno-brand-name--hero.dsh-yuno-brand-name--hero-light::before{
+  background-image:linear-gradient(100deg,#d81b6b,#b0137a 48%,#6d28d9)}
 
 /* 输入框下方：调音台条（时钟 + 署名 + 电平 + MASTER） */
 .dsh-yuno-mixer{display:flex;align-items:center;justify-content:center;gap:9px;height:20px;
@@ -278,10 +488,7 @@ html.dsh-yuno-light .dsh-yuno-model__tag{background:linear-gradient(90deg,#d81b6
 @keyframes dsh-yuno-cell{0%,100%{opacity:.18}46%{opacity:.95}}
 @media (prefers-reduced-motion:reduce){.dsh-yuno-mixer__meter i{animation:none;opacity:.5}}
 
-/* 侧栏每行的曲目号 */
-.dsh-yuno-track{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;
-  font-family:var(--dsw-font-mono),ui-monospace,monospace;font-size:8px;font-weight:600;
-  font-variant-numeric:tabular-nums;letter-spacing:0;color:var(--dsw-alias-label-tertiary);opacity:.5}
+
 
 /* ───────── 亮色：把霓虹收掉，只留纸和荧光笔 ───────── */
 html.dsh-yuno-light .dsh-yuno-mixer__clock{color:#b3142a;text-shadow:none}
@@ -306,8 +513,7 @@ html.dsh-yuno-light [class*="_composerSeat"] [class*="_card"]{
 html.dsh-yuno-light [data-message-bubble]{
   box-shadow:0 10px 24px -28px rgba(194,24,91,.6),inset 0 1px 0 rgba(255,255,255,.6)}
 html.dsh-yuno-light [class*="_composerSeat"] [class*="_add"]{
-  background:radial-gradient(circle at 50% 30%,#ffffff,#efe2f0 74%);
-  box-shadow:inset 0 0 0 1px rgba(194,24,91,.45),inset 0 -2px 4px rgba(120,60,140,.16)}
+  background:#f3e6f4;box-shadow:inset 0 0 0 1px rgba(194,24,91,.4)}
 html.dsh-yuno-light .dsh-yuno-mixer{opacity:.7}
 
 /* ───────── 加浓：粉与紫 ─────────
@@ -319,7 +525,14 @@ html.dsh-yuno-light .dsh-yuno-mixer{opacity:.7}
   --yuno-disc:rgba(208,152,255,.68);--yuno-star:rgba(255,188,236,.92)}
 /* 右下那团紫光原来太亮：压一档、往外推一点、再糊开 */
 .dsh-yuno-ambient__glow--b{bottom:-26vw;right:-16vw;filter:blur(96px)}
-.dsh-yuno-ambient__disc{opacity:.3}
+/* 黑胶圆环：原来 54vw 整个摊进内容区，又因为氛围层在内容之上，
+   那几圈线就直接画在消息和侧栏上面。收成右上角外侧的一小段弧，
+   再压暗、加一点模糊，让它只当余光，不当图形。 */
+.dsh-yuno-ambient__disc{
+  right:-36vw;top:-40vw;width:64vw;height:64vw;opacity:.12;
+  filter:blur(1.4px);
+  -webkit-mask-image:radial-gradient(circle at 68% 34%,#000 0 22%,rgba(0,0,0,.3) 36%,transparent 48%);
+  mask-image:radial-gradient(circle at 68% 34%,#000 0 22%,rgba(0,0,0,.3) 36%,transparent 48%)}
 .dsh-yuno-ambient__rail{background:linear-gradient(180deg,transparent,rgba(255,61,127,.5),rgba(170,90,255,.42) 62%,rgba(62,230,224,.16),transparent)}
 [class*="_composerSeat"] [class*="_card"]{
   background-image:linear-gradient(180deg,rgba(255,61,127,.14),rgba(150,80,255,.07) 46%,transparent 74%)}
@@ -468,6 +681,10 @@ html.dsh-yuno-light [data-chat-running]{color:#bf1360}
       const paint = (el) => {
         if (!el || !el.classList) return;
         el.classList.add('dsh-yuno-brand-name--hero');
+        /* ::before 的描边层靠 attr() 取文字，得把品牌名写到属性上 */
+        if (el.getAttribute('data-yuno-text') !== BRAND_NAME) {
+          el.setAttribute('data-yuno-text', BRAND_NAME);
+        }
         el.classList.toggle(
           'dsh-yuno-brand-name--hero-light',
           !!(store && store.get && store.get() === 'light'),
@@ -553,6 +770,7 @@ html.dsh-yuno-light [data-chat-running]{color:#bf1360}
             try {
               el.classList.remove('dsh-yuno-brand-name--hero');
               el.classList.remove('dsh-yuno-brand-name--hero-light');
+              el.removeAttribute('data-yuno-text');
             } catch (error) { /* detached */ }
           });
           painted.clear();
@@ -875,6 +1093,7 @@ html.dsh-yuno-light [data-chat-running]{color:#bf1360}
       });
     }
 
+
     function createModeStore(ctx) {
       const read = () => {
         try {
@@ -980,6 +1199,77 @@ html.dsh-yuno-light [data-chat-running]{color:#bf1360}
       return two(d.getHours()) + ':' + two(d.getMinutes());
     }
 
+    /* ───────── 字体的读写与应用 ───────── */
+
+    /** 读同一份偏好；坏数据就退回默认。 */
+    function readFontPref() {
+      try {
+        const raw = localStorage.getItem(FONT_KEY);
+        if (!raw) return { family: FONT_FALLBACK, weight: 400 };
+        const parsed = JSON.parse(raw);
+        let family = typeof parsed.family === 'string' ? parsed.family : FONT_FALLBACK;
+        /* 旧默认是 HarmonyOS Sans SC；现在包内自带字体才是默认。
+           存着旧默认的当作没设过，升级后自动换成新默认。 */
+        if (family === 'HarmonyOS Sans SC') family = FONT_FALLBACK;
+        const weight = FONT_WEIGHTS.indexOf(Number(parsed.weight)) >= 0 ? Number(parsed.weight) : 400;
+        return { family, weight };
+      } catch (error) {
+        return { family: FONT_FALLBACK, weight: 400 };
+      }
+    }
+
+    /**
+     * 应用到 <html> 的内联样式上。
+     * 同时设 --dsh-font-family-text：DSH 自己的字体设置填了值时它优先，
+     * 不一起设就会被它盖掉。留空则移除，把控制权还给 DSH。
+     */
+    function applyFontPref(pref) {
+      try { localStorage.setItem(FONT_KEY, JSON.stringify(pref)); } catch (error) { /* 隐私模式 */ }
+      const root = document.documentElement;
+      const family = (pref.family || '').trim();
+      if (family) {
+        const quoted = '"' + family.split('"').join('') + '"';
+        const stack = quoted + ',"Yuno ShuHeiTi","Alimama ShuHeiTi","HarmonyOS Sans SC","HarmonyOS Sans","Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",Helvetica,Arial,sans-serif';
+        root.style.setProperty('--dsh-font-family-text', stack);
+        root.style.setProperty('--dsh-font-family-text-default', stack);
+      } else {
+        root.style.removeProperty('--dsh-font-family-text');
+        root.style.removeProperty('--dsh-font-family-text-default');
+      }
+      root.style.setProperty('--yuno-fw', String(pref.weight || 400));
+    }
+
+    /**
+     * 土办法列字体：同一段文字分别用 monospace / serif / sans-serif 量宽度，
+     * 再拿「候选字体 + 这些 fallback」量一遍；宽度变了就说明候选字体真的生效。
+     * 浏览器没有枚举系统字体的 API，这是唯一不依赖 host 侧的做法。
+     */
+    async function probeFontFamilies() {
+      // 包内字体是 @font-face，没被用过之前不会加载；先显式 load 一次，
+      // 否则量宽度量到的是 fallback，下拉里就看不到它。
+      try { await document.fonts.load('16px "Yuno ShuHeiTi"'); } catch (error) { /* 忽略 */ }
+      const probe = document.createElement('span');
+      probe.textContent = 'mmmmmmmmmmlli\u7531\u4e43\u751f\u5b58\u5831\u544a0123';
+      probe.style.cssText = 'position:absolute;left:-9999px;top:0;font-size:48px;visibility:hidden;white-space:nowrap';
+      document.body.appendChild(probe);
+      const base = {};
+      ['monospace', 'serif', 'sans-serif'].forEach((fallback) => {
+        probe.style.fontFamily = fallback;
+        base[fallback] = probe.offsetWidth;
+      });
+      const found = [];
+      for (const name of FONT_CANDIDATES) {
+        let hit = false;
+        for (const fallback of ['monospace', 'serif', 'sans-serif']) {
+          probe.style.fontFamily = '"' + name + '",' + fallback;
+          if (probe.offsetWidth !== base[fallback]) { hit = true; break; }
+        }
+        if (hit) found.push(name);
+      }
+      probe.remove();
+      return found.sort((a, b) => a.localeCompare(b));
+    }
+
     function createComponents(store) {
       const useMode = () => React.useSyncExternalStore(store.subscribe, store.get, store.get);
 
@@ -1008,28 +1298,15 @@ html.dsh-yuno-light [data-chat-running]{color:#bf1360}
         const mode = useMode();
         const light = mode === 'light';
         useBusyFlag();
-        const stars = STAR_FIELD.map(([left, top, size, delay], index) => h('span', {
-          key: 'star-' + index,
-          className: 'dsh-yuno-ambient__star',
-          style: {
-            left: left + '%', top: top + '%', width: size + 'px', height: size + 'px',
-            animationDelay: delay + 's', animationDuration: (6.4 + (index % 3) * 0.9) + 's',
-          },
-        }));
+        // 像素房间自己就是氛围，这里只留极淡的光晕/暗角给侧栏和边缘，
+        // 不再画黑胶/星点/电平，避免跟壁纸打架。
         return h('div', {
           className: 'dsh-yuno-ambient' + (light ? ' dsh-yuno-ambient--light' : ''),
           'aria-hidden': 'true',
         },
           h('div', { key: 'glow-a', className: 'dsh-yuno-ambient__glow dsh-yuno-ambient__glow--a' }),
           h('div', { key: 'glow-b', className: 'dsh-yuno-ambient__glow dsh-yuno-ambient__glow--b' }),
-          h('div', { key: 'glow-c', className: 'dsh-yuno-ambient__glow dsh-yuno-ambient__glow--c' }),
-          h('div', { key: 'disc', className: 'dsh-yuno-ambient__disc' }, DISC),
-          h('div', { key: 'rail-l', className: 'dsh-yuno-ambient__rail dsh-yuno-ambient__rail--l' }),
-          h('div', { key: 'rail-r', className: 'dsh-yuno-ambient__rail dsh-yuno-ambient__rail--r' }),
-          h('div', { key: 'vignette', className: 'dsh-yuno-ambient__vignette' }),
-          stars,
-          h('div', { key: 'meter', className: 'dsh-yuno-ambient__meter' },
-            [0, 1, 2].map((index) => h('i', { key: index }))));
+          h('div', { key: 'vignette', className: 'dsh-yuno-ambient__vignette' }));
       }
 
       function Logo(props) {
@@ -1062,7 +1339,11 @@ html.dsh-yuno-light [data-chat-running]{color:#bf1360}
         const mode = useMode();
         return h('span', {
           className: 'dsh-yuno-brand-name' + (mode === 'light' ? ' dsh-yuno-brand-name--light' : ''),
-        }, BRAND_NAME);
+        },
+          h('span', {
+            key: 'stroke', className: 'dsh-yuno-brand-name__stroke', 'aria-hidden': 'true',
+          }, BRAND_NAME),
+          h('span', { key: 'fill', className: 'dsh-yuno-brand-name__fill' }, BRAND_NAME));
       }
 
       /** 输入框下方：调音台条（时钟放在原来「我还活着哦」的位置）。 */
@@ -1097,17 +1378,7 @@ html.dsh-yuno-light [data-chat-running]{color:#bf1360}
           h('span', { key: 'tag', className: 'dsh-yuno-model__tag' }, '1017'));
       }
 
-      /** 侧栏每行前面的曲目号：由 sessionId 稳定地算两位数字。 */
-      function TrackNo(props) {
-        const id = String(props.sessionId || '');
-        if (!id) return null;
-        let hash = 0;
-        for (let i = 0; i < id.length; i += 1) {
-          hash = (hash * 33 + id.charCodeAt(i)) % 100003;
-        }
-        const number = String((hash % 99) + 1);
-        return h('span', { className: 'dsh-yuno-track' }, number.length < 2 ? '0' + number : number);
-      }
+      
 
       /**
        * 右上角工具排里的全屏开关。图标就是一个圆圈：进全屏后圈里填实。
@@ -1151,6 +1422,69 @@ html.dsh-yuno-light [data-chat-running]{color:#bf1360}
       }
 
       /**
+       * 设置页里的字体设置（设置 → 通用）。
+       *
+       * 浏览器没有 API 能枚举系统字体，所以先拿一份候选名单，
+       * 再用「同一段文字在不同 fallback 下量宽度」的土办法筛出真实装了的字体
+       * ——量到宽度变了就说明这个字体真的被用上。筛不出来的一律不列。
+       *
+       * 选择存 localStorage，启动时直接套用，不依赖 DSH 自己的字体设置项
+       * （那个填了字体会优先，所以这里同时把 --dsh-font-family-text 也设掉）。
+       */
+      function FontSettings() {
+        const [families, setFamilies] = React.useState([]);
+        const [family, setFamily] = React.useState(() => readFontPref().family);
+        const [weight, setWeight] = React.useState(() => readFontPref().weight);
+
+        React.useEffect(() => {
+          let alive = true;
+          probeFontFamilies().then((list) => { if (alive) setFamilies(list); });
+          return () => { alive = false; };
+        }, []);
+
+        React.useEffect(() => {
+          applyFontPref({ family, weight });
+        }, [family, weight]);
+
+        return h('div', { className: 'dsh-yuno-fontcard' },
+          h('div', { className: 'dsh-yuno-fontcard__title' }, '\u7531\u4e43 \u00b7 \u5b57\u4f53'),
+          h('div', { className: 'dsh-yuno-fontcard__desc' },
+            '\u6362\u5168\u5c40\u5b57\u4f53\u548c\u5b57\u91cd\uff0c\u5b58\u5728\u672c\u673a\uff0c\u91cd\u542f\u540e\u4e5f\u5728\u3002'),
+          h('label', null, '\u5b57\u4f53'),
+          h('select', {
+            value: families.indexOf(family) >= 0 ? family : '',
+            onChange: (e) => { if (e.currentTarget.value) setFamily(e.currentTarget.value); },
+          },
+            families.indexOf(family) >= 0 ? null : h('option', { value: '' }, family || '\u672a\u77e5'),
+            families.map((name) => h('option', { key: name, value: name }, name))),
+          h('label', null, '\u6216\u76f4\u63a5\u586b\u5b57\u4f53\u540d'),
+          h('input', {
+            type: 'text', value: family, spellCheck: false, autoComplete: 'off',
+            placeholder: 'HarmonyOS Sans SC',
+            onChange: (e) => setFamily(e.currentTarget.value),
+          }),
+          h('label', null, '\u5b57\u91cd'),
+          h('div', { className: 'dsh-yuno-fontcard__seg' },
+            FONT_WEIGHTS.map((w) => h('button', {
+              key: w, type: 'button',
+              'aria-pressed': weight === w,
+              onClick: () => setWeight(w),
+              style: { fontWeight: w },
+            }, String(w)))),
+          h('div', {
+            className: 'dsh-yuno-fontcard__preview',
+            style: { fontFamily: family, fontWeight: weight },
+          }, '\u5343\u77f3\u7531\u4e43 \u00b7 DJ&Mp. \u2014 \u8c03\u97f3\u53f0\u8fd8\u4eae\u7740\uff0c\u6240\u4ee5\u6211\u8fd8\u6d3b\u7740\u3002 0123'),
+          h('div', { className: 'dsh-yuno-fontcard__row' },
+            h('div', { className: 'dsh-yuno-fontcard__note' },
+              '\u82e5 DSH \u8bbe\u7f6e\u91cc\u81ea\u5df1\u586b\u4e86\u5b57\u4f53\uff0c\u90a3\u4e2a\u4f1a\u76d6\u8fc7\u8fd9\u91cc\u3002'),
+            h('button', {
+              type: 'button', className: 'dsh-yuno-fontcard__reset',
+              onClick: () => { setFamily(FONT_FALLBACK); setWeight(400); },
+            }, '\u6062\u590d\u9ed8\u8ba4')));
+      }
+
+      /**
        * 右上角工具排里的重载开关：清掉 Service Worker 和 Cache Storage 后
        * 刷新整个界面，让改过的 client 插件直接生效。
        * 只对 client 侧有用；host 侧（index.js）改了还是得重启 DSH。
@@ -1185,7 +1519,7 @@ html.dsh-yuno-light [data-chat-running]{color:#bf1360}
         h('path', { d: 'M20 4v7h-7' })));
       }
 
-      return { AmbientLayer, BrandMark, BrandName, FullscreenToggle, ReloadButton, HeroMark, MixerStrip, TrackNo, ModelLabel };
+      return { AmbientLayer, BrandMark, BrandName, FullscreenToggle, ReloadButton, FontSettings, HeroMark, MixerStrip, ModelLabel };
     }
 
     return {
@@ -1274,6 +1608,12 @@ html.dsh-yuno-light [data-chat-running]{color:#bf1360}
           };
         });
 
+        /* 字体偏好：启动就先套一遍，不等面板挂上（空会话页也可能没那个按钮）。 */
+        ctx.effect(() => {
+          applyFontPref(readFontPref());
+          return () => {};
+        });
+
         ctx.effect(() => {
           const previous = document.title;
           const isShellTitle = () => /deepseek/i.test(document.title || '');
@@ -1296,7 +1636,7 @@ html.dsh-yuno-light [data-chat-running]{color:#bf1360}
         });
 
         const {
-          AmbientLayer, BrandMark, BrandName, FullscreenToggle, ReloadButton, HeroMark, MixerStrip, TrackNo, ModelLabel,
+          AmbientLayer, BrandMark, BrandName, FullscreenToggle, ReloadButton, FontSettings, HeroMark, MixerStrip, ModelLabel,
         } = createComponents(store);
 
         ctx.slots.inject('shell.overlay', () => ctx.slots.register(
@@ -1314,10 +1654,7 @@ html.dsh-yuno-light [data-chat-running]{color:#bf1360}
           BrandName
         ));
 
-        ctx.slots.inject('sidebar.session.row.leading', () => ctx.slots.register(
-          { name: 'sidebar.session.row.leading', id: 'yuno-track', order: 5 },
-          TrackNo
-        ));
+        
 
         ctx.slots.inject('conversation.input.model.label', () => ctx.slots.register(
           { name: 'conversation.input.model.label', priority: -1 },
@@ -1332,6 +1669,12 @@ html.dsh-yuno-light [data-chat-running]{color:#bf1360}
         ctx.slots.inject('conversation.composer.dock', () => ctx.slots.register(
           { name: 'conversation.composer.dock', id: PACKAGE_ID, order: -5 },
           MixerStrip
+        ));
+
+        /* 字体设置：挂进「设置 → 通用」，不占工具排。 */
+        ctx.slots.inject('settings.general.item', () => ctx.slots.register(
+          { name: 'settings.general.item', id: 'yuno-font', order: 30 },
+          FontSettings
         ));
 
         /* 右上角那排工具（utilities）里排到最左：现有最左的 open-in-app 是 -10 */
